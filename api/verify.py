@@ -15,26 +15,40 @@ load_dotenv()
 client = genai.Client()
 router = APIRouter(prefix="/api/verify", tags=["verify"])
 
-golden_standards = {
-    "artcin": {
-        "text_data": {
-            "type": "tablet",
-            "nafdac_number": "04-4213",
-            "manufacturer": "Yangzhou No. 3 Pharmaceutical Co., Ltd."
+golden_standards = [
+    {   
+        "artcin": {
+            "text_data": {
+                "type": "tablet",
+                "nafdac_number": "04-4213",
+                "manufacturer": "Yangzhou No. 3 Pharmaceutical Co., Ltd."
+            },
+            "golden_box_image_path": "medicine_images/artcin/artcin_package.jpg",
+            "golden_blister_image_path": "medicine_images/artcin/artcin_blister_pack.jpg"
         },
-        "golden_box_image_path": "medicine_images/artcin/artcin_package.jpg",
-        "golden_blister_image_path": "medicine_images/artcin/artcin_blister_pack.jpg"
     },
 
-    "nasodyne": {
-        "text_data": {
-            "type": "syrup",
-            "nafdac_number": "A11-1161",
-            "manufacturer": "May & Baker Nigeria PLC"
+    {   
+        "artcin": {
+            "text_data": {
+                "type": "syrup",
+                "nafdac_number": "04-4214",
+                "manufacturer": "Yangzhou No. 3 Pharmaceutical Co., Ltd."
+            },
+            "golden_box_image_path": "medicine_images/artcin/artcin_package.jpg",
         },
-        "golden_box_image_path": "medicine_images/nasodyne/nasodyne_package.jpg"
     },
-}
+
+    {   "nasodyne": {
+            "text_data": {
+                "type": "syrup",
+                "nafdac_number": "A11-1161",
+                "manufacturer": "May & Baker Nigeria PLC"
+            },
+            "golden_box_image_path": "medicine_images/nasodyne/nasodyne_package.jpg"
+        },
+    }
+]
 
 
 
@@ -70,20 +84,71 @@ async def run_gemini_call(system_prompt: str, contents: list) -> dict:
 async def verify_drug(
     # Instead of a BaseModel, we now define the form fields one by one.
     drug_name: str = Form(...),
+    drug_type: str = Form(...),
     nafdac_number: str = Form(...),
     box_image: UploadFile = File(...),
     blister_pack_image: UploadFile | None = File(None)
 ):
     """
     The main verification endpoint. Accepts multipart/form-data.
+    
+    Args:
+        drug_name: Name of the drug to verify
+        drug_type: Type of drug formulation - must be either "syrup" or "tablet"
+        nafdac_number: The NAFDAC registration number
+        box_image: Image of the drug packaging/box
+        blister_pack_image: Optional image of blister pack (for tablets)
     """
     
-    # 1. Get the "Golden Standard" data
-    golden_data = golden_standards.get(drug_name.lower())
-    if not golden_data:
-        raise HTTPException(status_code=404, detail="Drug not found in our MVP database.")
+    # 0. Normalize input
+    drug_name_lower = drug_name.lower().strip()
+    drug_type_lower = drug_type.lower().strip()
     
-    # 1.5. Read the golden standard images from disk
+    # 1. Check if drug exists at all (before validating type)
+    drug_exists = any(drug_name_lower in entry for entry in golden_standards)
+    
+    if not drug_exists:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Drug '{drug_name}' not found in our database."
+        )
+    
+    # 2. Validate drug_type format
+    valid_types = ["syrup", "tablet"]
+    
+    if drug_type_lower not in valid_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid drug type '{drug_type}'. Must be either 'syrup' or 'tablet'."
+        )
+    
+    # 3. Find the matching drug with the specified type from golden_standards
+    golden_data = None
+    
+    # Search through the list for matching drug_name and type
+    for entry in golden_standards:
+        if drug_name_lower in entry:
+            drug_info = entry[drug_name_lower]
+            if drug_info.get("text_data", {}).get("type", "").lower() == drug_type_lower:
+                golden_data = drug_info
+                break
+    
+    if not golden_data:
+        # Drug exists but not with the specified type
+        # Find available types for this drug
+        available_types = []
+        for entry in golden_standards:
+            if drug_name_lower in entry:
+                drug_type_found = entry[drug_name_lower].get("text_data", {}).get("type", "")
+                if drug_type_found:
+                    available_types.append(drug_type_found)
+        
+        raise HTTPException(
+            status_code=404,
+            detail=f"'{drug_name}' is not available as a '{drug_type_lower}'. Available types: {', '.join(available_types)}."
+        )
+    
+    # 4. Read the golden standard images from disk
     try:
         with open(golden_data["golden_box_image_path"], "rb") as f:
             golden_box_bytes = f.read()
@@ -101,7 +166,7 @@ async def verify_drug(
         raise HTTPException(status_code=500, detail=f"Error reading golden images: {str(e)}")
     
     
-    # 2. Read the *user's* uploaded files into bytes
+    # 5  . Read the *user's* uploaded files into bytes
     try:
         box_image_bytes = await box_image.read()
         
