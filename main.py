@@ -5,7 +5,33 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="ChecMed Verification API")
+app = FastAPI(
+    title="CheckMed Verification API",
+    description="""
+    **CheckMed** is a pharmaceutical verification API that uses AI to authenticate medications 
+    and detect counterfeit drugs.
+    
+    ## Features
+    
+    * **NAFDAC Number Verification** - Validates official drug registration numbers
+    * **Package Inspection** - Compares user-uploaded packaging against verified golden standards
+    * **Image Analysis** - Uses Google's Gemini AI to detect visual discrepancies
+    * **Multi-stage Verification** - Sequential checks for comprehensive authentication
+    
+    ## How It Works
+    
+    1. Upload images of the medication (packaging, blister packs)
+    2. Provide the drug name and NAFDAC number
+    3. Receive instant HIGH-RISK or VERIFIED status with detailed reasoning
+    
+    This API helps protect consumers from counterfeit medications by leveraging computer vision 
+    and multi-modal AI models to verify product authenticity.
+    """,
+    version="1.0.0",
+    contact={
+        "name": "CheckMed Team",
+    }
+)
 
 
 API_KEY = os.getenv("GOOGLE_API_KEY")
