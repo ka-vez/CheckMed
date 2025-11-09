@@ -121,12 +121,15 @@ async def verify_drug(
         if not golden_nafdac:
             raise HTTPException(status_code=500, detail="Golden standard missing NAFDAC number.")
         if user_nafdac != golden_nafdac:
-            return {
+            message =  {
                 "status": "HIGH-RISK",
                 "reason": "NAFDAC number mismatch",
                 "expected_nafdac": golden_nafdac,
                 "provided_nafdac": user_nafdac
             }
+
+            raise HTTPException(status_code=404, detail=message)
+
         # Passed the NAFDAC check
         print({"status": "OK", "reason": "NAFDAC number matches"})
 
@@ -146,7 +149,7 @@ async def verify_drug(
         ]
         call_2_result = await run_gemini_call(system_prompt_2, contents_2)
         if call_2_result.get("status") == "HIGH-RISK":
-            return call_2_result
+            raise HTTPException(status_code=404, detail=call_2_result)
 
         # passed Package Inspector Check
         print(call_2_result)
@@ -174,7 +177,7 @@ async def verify_drug(
             ]
             call_3_result = await run_gemini_call(system_prompt_3, contents_3)
             if call_3_result.get("status") == "HIGH-RISK":
-                return call_3_result
+                raise HTTPException(status_code=404, detail=call_3_result)
             
             print(call_3_result)
 
