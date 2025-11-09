@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from api import verify
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -33,6 +34,15 @@ app = FastAPI(
     }
 )
 
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=False,  # Must be False when allow_origins=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
