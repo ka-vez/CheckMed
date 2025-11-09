@@ -1,8 +1,11 @@
+# local imports
 import os
 from fastapi import FastAPI
-from api import verify
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+
+# external imports
+from api import verify, report
 
 load_dotenv()
 
@@ -49,6 +52,7 @@ if not API_KEY:
     raise EnvironmentError("GEMINI_API_KEY environment variable not set.")
 
 app.include_router(verify.router)
+app.include_router(report.router)
 
 
 

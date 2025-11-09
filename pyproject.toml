@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.121.0",
+    "fastapi-mail>=1.5.8",
     "google-genai>=1.49.0",
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.20",

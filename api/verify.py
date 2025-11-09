@@ -80,7 +80,7 @@ async def run_gemini_call(system_prompt: str, contents: list) -> dict:
 
 # --- 5. Your Single API Endpoint (UPDATED) ---
 
-@router.post("/verify")
+@router.post("/")
 async def verify_drug(
     # Instead of a BaseModel, we now define the form fields one by one.
     drug_name: str = Form(...),
