@@ -29,13 +29,14 @@ golden_standards = [
     },
 
     {   
-        "artcin": {
+        "meprasil-20": {
             "text_data": {
-                "type": "syrup",
-                "nafdac_number": "04-4214",
-                "manufacturer": "Yangzhou No. 3 Pharmaceutical Co., Ltd."
+                "type": "tablet",
+                "nafdac_number": "04-3823",
+                "manufacturer": "Fidson Healthcare Plc"
             },
-            "golden_box_image_path": "medicine_images/artcin/artcin_package.jpg",
+            "golden_box_image_path": "medicine_images/meprasil-20/meprasil-20_package.jpg",
+            "golden_blister_image_path": "medicine_images/meprasil-20/meprasil-20_blister_pack.jpg"
         },
     },
 
