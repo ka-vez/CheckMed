@@ -5,13 +5,14 @@ from sqlmodel import SQLModel, Session, create_engine
 load_dotenv()  
 
 RENDER_DATABASE_URL = os.getenv("RENDER_DATABASE_URL")
+print(RENDER_DATABASE_URL)
 
 SQLITE_DATABASE_NAME = "check_med.db"
 SQLITE_DATABASE_URL = f"sqlite:///{SQLITE_DATABASE_NAME}"
 
 
 # Use the render database URL if provided, otherwise fall back to the local SQLite URL
-database_url = RENDER_DATABASE_URL or SQLITE_DATABASE_URL
+database_url = RENDER_DATABASE_URL 
 engine = create_engine(database_url)
 
 
