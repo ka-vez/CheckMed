@@ -5,9 +5,13 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 # external imports
-from api import verify, report
+from api import verify, report, register
+from db.database import init_db
 
 load_dotenv()
+
+# Initialize database tables
+init_db()
 
 app = FastAPI(
     title="CheckMed Verification API",
@@ -53,6 +57,7 @@ if not API_KEY:
 
 app.include_router(verify.router)
 app.include_router(report.router)
+app.include_router(register.router)
 
 
 
