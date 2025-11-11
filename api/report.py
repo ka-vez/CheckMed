@@ -21,11 +21,11 @@ conf = ConnectionConfig(
     MAIL_USERNAME = os.getenv("MAIL_EMAIL", ""),         # Your Gmail address
     MAIL_PASSWORD = SecretStr(os.getenv("MAIL_PASSWORD", "")),  # Gmail App Password
     MAIL_FROM = os.getenv("MAIL_EMAIL", ""),                 
-    MAIL_PORT = 587,
+    MAIL_PORT = 465,  # Changed from 587 to 465
     MAIL_SERVER = "smtp.gmail.com",                  # Changed from SendGrid to Gmail
     MAIL_FROM_NAME = "ChecMed Report",
-    MAIL_STARTTLS = True,
-    MAIL_SSL_TLS = False,
+    MAIL_STARTTLS = False,  # Changed from True to False
+    MAIL_SSL_TLS = True,  # Changed from False to True
     USE_CREDENTIALS = True,
     VALIDATE_CERTS = True
 )
@@ -148,17 +148,23 @@ async def send_report(
                 print("========================================\n")
             else:
                 # Production mode: send actual email
+                print(f"Attempting to send email to {NAFDAC_EMAIL}...")
+                print(f"SMTP Config: {conf.MAIL_SERVER}:{conf.MAIL_PORT}")
+                print(f"From: {conf.MAIL_FROM}")
                 await fm.send_message(message)
-                print(f"Email sent successfully to {NAFDAC_EMAIL}")
+                print(f"✅ Email sent successfully to {NAFDAC_EMAIL}")
         except Exception as e:
-            print(f"Error sending email: {str(e)}")
+            print(f"❌ ERROR sending email: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
         finally:
             # Clean up temporary files
             for temp_file in temp_files:
                 try:
                     os.unlink(temp_file)
-                except:
-                    pass
+                    print(f"Cleaned up temp file: {temp_file}")
+                except Exception as cleanup_error:
+                    print(f"Error cleaning up {temp_file}: {cleanup_error}")
     
     # Add to background tasks so the user isn't waiting
     background_tasks.add_task(send_and_cleanup)
